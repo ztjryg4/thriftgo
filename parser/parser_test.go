@@ -263,3 +263,33 @@ func TestSkip(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+const testDefault = `
+struct Basic {
+	1: i64 ID
+	2: string Name
+}
+
+enum MyEnum {
+	A
+	B
+	C
+}
+
+struct Bar {
+	1: MyEnum ID
+	2: Basic Basic
+}
+
+struct Foo {
+	1: map<string, Bar> BarMap = {"0": {"Basic": {"ID": 1, "Name": "my name", "IDs": 2}, "ID": 2}}
+}
+`
+
+func TestDefault(t *testing.T) {
+	ast, err := parser.ParseString("main.thrift", testDefault)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(ast)
+}
