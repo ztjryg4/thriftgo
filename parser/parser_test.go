@@ -16,9 +16,11 @@ package parser_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/cloudwego/thriftgo/parser"
 	"github.com/cloudwego/thriftgo/pkg/test"
+	jsoniter "github.com/json-iterator/go"
 )
 
 const testAnnotation = `
@@ -292,4 +294,17 @@ func TestDefault(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(ast)
+}
+
+type My struct {
+	A string
+}
+
+func TestMyTest(t *testing.T) {
+	t.Log(time.Until(time.Date(2022, 1, 22, 11, 15, 0, 0, time.Local)))
+	var a *My
+	t.Log(jsoniter.UnmarshalFromString("{}", a))
+	var s []int
+	var sn []int = make([]int, 0)
+	t.Log(s == nil, sn == nil)
 }
