@@ -30,11 +30,12 @@ import (
 // GoBackend generates go codes.
 // The zero value of GoBackend is ready for use.
 type GoBackend struct {
-	err error
-	tpl *template.Template
-	req *plugin.Request
-	res *plugin.Response
-	log backend.LogFunc
+	err     error
+	tpl     *template.Template
+	testTpl *template.Template
+	req     *plugin.Request
+	res     *plugin.Response
+	log     backend.LogFunc
 
 	utils *CodeUtils
 	funcs template.FuncMap
@@ -110,8 +111,14 @@ func (g *GoBackend) prepareTemplates() {
 		all = template.Must(all.Parse(tpl))
 	}
 
+	testall := template.New(name + "_test").Funcs(g.funcs)
+	for _, tpl := range templates.TestTemplates() {
+		testall = template.Must(testall.Parse(tpl))
+	}
+
 	// XXX(lushaojie): support substutions by all.AddParseTree
 	g.tpl = all
+	g.testTpl = testall
 }
 
 func (g *GoBackend) fillRequisitions() {
@@ -182,6 +189,18 @@ func (g *GoBackend) renderOneFile(ast *parser.Thrift) error {
 	g.res.Contents = append(g.res.Contents, &plugin.Generated{
 		Content:        buf.String(),
 		InsertionPoint: &point,
+	})
+
+	// test file
+	buf.Reset()
+	err = g.testTpl.ExecuteTemplate(&buf, g.testTpl.Name(), scope)
+	if err != nil {
+		return fmt.Errorf("%s: %w", ast.Filename, err)
+	}
+	testFilePath := strings.ReplaceAll(path, ".go", "_test.go")
+	g.res.Contents = append(g.res.Contents, &plugin.Generated{
+		Content: buf.String(),
+		Name:    &testFilePath,
 	})
 	return nil
 }

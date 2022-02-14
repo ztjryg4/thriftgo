@@ -14,6 +14,13 @@
 
 package templates
 
+func TestTemplates() []string {
+	return []string{
+		TestFile,
+		StructLikeTest,
+	}
+}
+
 // Templates returns all templates defined in this package.
 func Templates() []string {
 	return []string{

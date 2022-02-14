@@ -17,6 +17,7 @@ package golang
 import (
 	"fmt"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -147,6 +148,16 @@ func (cu *CodeUtils) GetFilePath(t *parser.Thrift) string {
 func (cu *CodeUtils) GetPackageName(ast *parser.Thrift) string {
 	namespace := ast.GetNamespaceOrReferenceName("go")
 	return cu.NamespaceToPackage(namespace)
+}
+
+var testSuffixMap = make(map[string]int)
+
+// GetPackageTestName returns a go package name for the given thrift AST.
+func (cu *CodeUtils) GetPackageTestName(ast *parser.Thrift) string {
+	namespace := ast.GetNamespaceOrReferenceName("go")
+	name := "MyTest" + strconv.Itoa(testSuffixMap[namespace])
+	testSuffixMap[namespace] += 1
+	return name
 }
 
 // NamespaceToPackage converts a namespace to a package.
@@ -281,11 +292,12 @@ func (cu *CodeUtils) BuildFuncMap() template.FuncMap {
 		"InsertionPoint": plugin.InsertionPoint,
 		"Unexport":       common.Unexport,
 
-		"Debug":          cu.Debug,
-		"Features":       cu.Features,
-		"GetPackageName": cu.GetPackageName,
-		"GenTags":        cu.GenTags,
-		"GenFieldTags":   cu.GenFieldTags,
+		"Debug":              cu.Debug,
+		"Features":           cu.Features,
+		"GetPackageName":     cu.GetPackageName,
+		"GetPackageTestName": cu.GetPackageTestName,
+		"GenTags":            cu.GenTags,
+		"GenFieldTags":       cu.GenFieldTags,
 		"MkRWCtx": func(f *Field) (*ReadWriteContext, error) {
 			return cu.MkRWCtx(cu.rootScope, f)
 		},
