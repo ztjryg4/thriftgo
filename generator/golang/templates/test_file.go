@@ -21,6 +21,7 @@ package {{GetPackageName .AST}}
 import (
 	"bytes"
 	"testing"
+	"reflect"
 
 	"github.com/brianvoe/gofakeit"
 	"github.com/cloudwego/frugal"
@@ -29,6 +30,7 @@ import (
 
 var (
 	_ = bytes.Equal
+	_ = reflect.DeepEqual
 	_ = gofakeit.Struct
 	_ = frugal.EncodeObject
 	_ = test.Assert
@@ -63,7 +65,11 @@ var StructLikeTest = `
 	got = make([]byte, length)
 	s.FastWriteNocopy(want, nil)
 	frugal.EncodeObject(got, nil, s)
-	test.Assert(t, bytes.Equal(want, got))
+	wantS := &{{.GoName}}{}
+	gotS := &{{.GoName}}{}
+	wantS.FastRead(want)
+	frugal.DecodeObject(got, gotS)
+	test.Assert(t, reflect.DeepEqual(wantS, gotS))
 }
 {{- end}}{{/* define "StructLikeTest" */}}
 `
