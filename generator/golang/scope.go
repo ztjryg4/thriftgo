@@ -427,6 +427,7 @@ type Field struct {
 	name            Name
 	typeName        TypeName
 	frugalTypeName  TypeName
+	hasStructMapKey bool
 	defaultTypeName TypeName
 	defaultValue    Code
 	isResponse      bool

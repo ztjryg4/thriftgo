@@ -480,21 +480,6 @@ func (r *FrugalResolver) ResolveFrugalTypeName(t *parser.Type) (TypeName, error)
 	return TypeName(name), err
 }
 
-func getUnderlay(g *Scope, t *parser.Type) (*Scope, *parser.Type, string) {
-	name := t.Name
-	if ref := t.GetReference(); ref != nil {
-		g = g.includes[ref.Index].Scope
-		name = ref.Name
-	}
-	if t.IsTypedef != nil && *t.IsTypedef {
-		if typedef := g.Typedef(name); typedef != nil {
-			return getUnderlay(g, typedef.Type)
-		}
-	}
-
-	return g, t, name
-}
-
 func (r *FrugalResolver) getTypeName(g *Scope, t *parser.Type) (name string, err error) {
 	if _, ok := baseTypes[t.Name]; ok {
 		return t.Name, nil
@@ -502,17 +487,33 @@ func (r *FrugalResolver) getTypeName(g *Scope, t *parser.Type) (name string, err
 	if isContainerTypes[t.Name] {
 		return r.getContainerTypeName(g, t)
 	}
-	g, ut, name := getUnderlay(g, t)
+
+	name = t.Name
+
+	if ref := t.GetReference(); ref != nil {
+		g = g.includes[ref.Index].Scope
+		name = ref.Name
+	}
+
+	if t.IsTypedef != nil && *t.IsTypedef {
+		if typedef := g.Typedef(name); typedef != nil {
+			name, err := r.getTypeName(g, typedef.Type)
+			if err != nil {
+				return "", err
+			}
+			return name, nil
+		}
+	}
 
 	if name == "" {
 		return "", fmt.Errorf("getTypeName failed: type[%v] file[%s]", t, g.ast.Filename)
 	}
 
-	if !ut.Category.IsBaseType() && !ut.Category.IsContainerType() {
+	if t.Category.IsEnum() || t.Category.IsStructLike() {
 		name = g.globals.Get(name)
 	}
 
-	if g.namespace != r.root.namespace && ut.Category.IsStructLike() {
+	if g.namespace != r.root.namespace && t.Category.IsStructLike() {
 		pkg := r.root.includeIDL(r.util, g.ast)
 		name = pkg + "." + name
 	}
@@ -544,4 +545,30 @@ func (r *FrugalResolver) getContainerTypeName(g *Scope, t *parser.Type) (name st
 	}
 
 	return name, nil
+}
+
+// HasStructMapKey returns whether there is a struct type as map key
+func (r *FrugalResolver) HasStructMapKey(t *parser.Type) bool {
+	return r.checkTypeName(r.root, t)
+}
+
+func (r *FrugalResolver) checkTypeName(g *Scope, t *parser.Type) bool {
+	if isContainerTypes[t.Name] {
+		return r.checkContainerTypeName(g, t)
+	}
+	return false
+}
+
+func (r *FrugalResolver) checkContainerTypeName(g *Scope, t *parser.Type) bool {
+	if t.Name == "map" {
+		switch t.KeyType.Category {
+		case parser.Category_Struct, parser.Category_Exception, parser.Category_Union:
+			return true
+		}
+		if isContainerTypes[t.KeyType.Name] {
+			return r.checkTypeName(g, t.KeyType)
+		}
+		return false
+	}
+	return r.checkTypeName(g, t.ValueType)
 }

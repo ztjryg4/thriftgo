@@ -394,6 +394,7 @@ func (s *Scope) resolveTypesAndValues(cu *CodeUtils) {
 		v := f.Field
 		f.typeName = ensureType(resolver.ResolveFieldTypeName(v))
 		f.frugalTypeName = ensureType(frugalResolver.ResolveFrugalTypeName(v.Type))
+		f.hasStructMapKey = frugalResolver.HasStructMapKey(v.Type)
 		f.defaultTypeName = ensureType(resolver.GetDefaultValueTypeName(v))
 		if f.IsSetDefault() {
 			f.defaultValue = ensureCode(resolver.GetFieldInit(v))

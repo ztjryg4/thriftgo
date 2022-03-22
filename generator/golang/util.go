@@ -202,6 +202,9 @@ func (cu *CodeUtils) GenFieldTags(f *Field, insertPoint string) (string, error) 
 	if cu.Features().FrugalTag {
 		requiredness := strings.ToLower(f.Requiredness.String())
 		tags = append(tags, fmt.Sprintf(`frugal:"%d,%s,%s"`, f.ID, requiredness, f.frugalTypeName))
+		if f.hasStructMapKey {
+			tags = append(tags, `fake:"skip"`)
+		}
 	}
 	return cu.genFieldTags(f.Field, insertPoint, tags)
 }
