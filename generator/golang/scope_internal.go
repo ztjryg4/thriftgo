@@ -361,20 +361,25 @@ func (s *Scope) buildStructLike(cu *CodeUtils, v *parser.StructLike, usedName ..
 	return st
 }
 
+var unionNoSkip = make(map[*parser.StructLike]bool)
+
 func (s *Scope) resolveTypesAndValues(cu *CodeUtils) {
 	resolver := NewResolver(s, cu)
 	frugalResolver := NewFrugalResolver(s, cu)
 
 	ff := make(chan *Field)
+	sc := make(chan *StructLike)
 
 	go func() {
 		ss := append(s.StructLikes(), s.synthesized...)
 		for _, st := range ss {
 			for _, f := range st.fields {
 				ff <- f
+				sc <- st
 			}
 		}
 		close(ff)
+		close(sc)
 	}()
 
 	ensureType := func(t TypeName, e error) TypeName {
@@ -394,10 +399,20 @@ func (s *Scope) resolveTypesAndValues(cu *CodeUtils) {
 		v := f.Field
 		f.typeName = ensureType(resolver.ResolveFieldTypeName(v))
 		f.frugalTypeName = ensureType(frugalResolver.ResolveFrugalTypeName(v.Type))
-		f.hasStructMapKey = frugalResolver.HasStructMapKey(v.Type)
 		f.defaultTypeName = ensureType(resolver.GetDefaultValueTypeName(v))
 		if f.IsSetDefault() {
 			f.defaultValue = ensureCode(resolver.GetFieldInit(v))
+		}
+		st := <-sc
+		hasStructMapKey := frugalResolver.HasStructMapKey(v.Type)
+		selfReference := st.StructLike.Name == f.Type.Name
+		f.fakeSkip = hasStructMapKey || selfReference
+		if !f.fakeSkip && st.StructLike.Category == "union" {
+			if !unionNoSkip[st.StructLike] {
+				unionNoSkip[st.StructLike] = true
+			} else {
+				f.fakeSkip = true
+			}
 		}
 	}
 	for _, t := range s.typedefs {
