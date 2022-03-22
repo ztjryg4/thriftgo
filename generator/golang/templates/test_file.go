@@ -65,10 +65,13 @@ var StructLikeTest = `
 	got = make([]byte, length)
 	s.FastWriteNocopy(want, nil)
 	frugal.EncodeObject(got, nil, s)
-	wantS := &{{.GoName}}{}
-	gotS := &{{.GoName}}{}
+	wantS := New{{.GoName}}()
+	gotS := New{{.GoName}}()
 	wantS.FastRead(want)
-	frugal.DecodeObject(got, gotS)
+	_, err := frugal.DecodeObject(got, gotS)
+	if err != nil {
+		t.Fatal(err)
+	}
 	test.Assert(t, reflect.DeepEqual(wantS, gotS))
 }
 {{- end}}{{/* define "StructLikeTest" */}}
