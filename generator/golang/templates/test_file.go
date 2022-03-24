@@ -23,7 +23,7 @@ import (
 	"testing"
 	"reflect"
 
-	gofakeit "github.com/brianvoe/gofakeit/v6"
+	gofakeit "github.com/simon0-o/gofakeit/v6"
 	"github.com/cloudwego/frugal"
 	"github.com/cloudwego/thriftgo/pkg/test"
 	"github.com/r3labs/diff/v2"
