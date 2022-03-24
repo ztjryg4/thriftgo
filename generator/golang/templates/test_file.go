@@ -38,8 +38,7 @@ var (
 
 func Test{{GetPackageTestName .AST}}(t *testing.T) {
 	var want, got []byte
-	var length int
-	_, _, _ = want, got, length
+	_, _ = want, got
 {{- range .Structs}}
 {{template "StructLikeTest" .}}
 {{- end}}
@@ -59,16 +58,18 @@ var StructLikeTest = `
 {
 	s := &{{.GoName}}{}
 	gofakeit.Struct(s)
-	length = s.BLength()
 	// test.Assert(t, length == frugal.EncodedSize(s))
-	want = make([]byte, length)
-	got = make([]byte, length)
+	want = make([]byte, s.BLength())
+	got = make([]byte, frugal.EncodedSize(s))
 	s.FastWriteNocopy(want, nil)
-	frugal.EncodeObject(got, nil, s)
+	_, err := frugal.EncodeObject(got, nil, s)
+	if err != nil {
+		t.Fatal(err)
+	}
 	wantS := New{{.GoName}}()
 	gotS := New{{.GoName}}()
 	wantS.FastRead(want)
-	_, err := frugal.DecodeObject(got, gotS)
+	_, err = frugal.DecodeObject(got, gotS)
 	if err != nil {
 		t.Fatal(err)
 	}
