@@ -26,6 +26,7 @@ import (
 	gofakeit "github.com/brianvoe/gofakeit/v6"
 	"github.com/cloudwego/frugal"
 	"github.com/cloudwego/thriftgo/pkg/test"
+	"github.com/r3labs/diff/v2"
 )
 
 var (
@@ -34,6 +35,7 @@ var (
 	_ = gofakeit.Struct
 	_ = frugal.EncodeObject
 	_ = test.Assert
+	_ = diff.Diff
 )
 
 func Test{{GetPackageTestName .AST}}(t *testing.T) {
@@ -73,7 +75,10 @@ var StructLikeTest = `
 	if err != nil {
 		t.Fatal(err)
 	}
-	test.Assert(t, reflect.DeepEqual(wantS, gotS))
+	if !reflect.DeepEqual(wantS, gotS) {
+		dlog, _ := diff.Diff(wantS, gotS)
+		test.Assert(t, len(dlog) == 0)
+	}
 }
 {{- end}}{{/* define "StructLikeTest" */}}
 `
