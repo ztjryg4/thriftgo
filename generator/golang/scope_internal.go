@@ -404,9 +404,7 @@ func (s *Scope) resolveTypesAndValues(cu *CodeUtils) {
 			f.defaultValue = ensureCode(resolver.GetFieldInit(v))
 		}
 		st := <-sc
-		hasStructMapKey := frugalResolver.HasStructMapKey(v.Type)
-		selfReference := st.StructLike.Name == f.Type.Name
-		f.fakeSkip = hasStructMapKey || selfReference
+		f.fakeSkip = frugalResolver.HasStructMapKey(v.Type)
 		if !f.fakeSkip && st.StructLike.Category == "union" {
 			if !unionNoSkip[st.StructLike] {
 				unionNoSkip[st.StructLike] = true
