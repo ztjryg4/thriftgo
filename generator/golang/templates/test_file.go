@@ -70,14 +70,15 @@ var StructLikeTest = `
 	}
 	wantS := New{{.GoName}}()
 	gotS := New{{.GoName}}()
-	wantS.FastRead(want)
+	_, fastErr := wantS.FastRead(want)
 	_, err = frugal.DecodeObject(got, gotS)
-	if err != nil {
+	if err == nil {
+		if !reflect.DeepEqual(wantS, gotS) {
+			dlog, _ := diff.Diff(wantS, gotS)
+			test.Assert(t, len(dlog) == 0)
+		}
+	} else if fastErr == nil  {
 		t.Fatal(err)
-	}
-	if !reflect.DeepEqual(wantS, gotS) {
-		dlog, _ := diff.Diff(wantS, gotS)
-		test.Assert(t, len(dlog) == 0)
 	}
 }
 {{- end}}{{/* define "StructLikeTest" */}}
