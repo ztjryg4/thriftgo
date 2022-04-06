@@ -22,6 +22,7 @@ import (
 	"bytes"
 	"testing"
 	"reflect"
+	"strings"
 
 	gofakeit "github.com/simon0-o/gofakeit/v6"
 	"github.com/cloudwego/frugal"
@@ -37,6 +38,21 @@ var (
 	_ = test.Assert
 	_ = diff.Diff
 )
+
+func dlogFilter(dlog diff.Changelog) (ret diff.Changelog) {
+	for _, log := range dlog {
+		var skip bool
+		for _, path := range log.Path {
+			if strings.HasPrefix(path, "_") {
+				skip = true
+			}
+		}
+		if !skip {
+			ret =append(ret, log)
+		}
+	}
+	return
+}
 
 func Test{{GetPackageTestName .AST}}(t *testing.T) {
 	var want, got []byte
@@ -75,7 +91,7 @@ var StructLikeTest = `
 	if err == nil {
 		if !reflect.DeepEqual(wantS, gotS) {
 			dlog, _ := diff.Diff(wantS, gotS)
-			test.Assert(t, len(dlog) == 0)
+			test.Assert(t, len(dlogFilter(dlog)) == 0)
 		}
 	} else if fastErr == nil  {
 		t.Fatal(err)
