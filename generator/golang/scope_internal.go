@@ -412,6 +412,9 @@ func (s *Scope) resolveTypesAndValues(cu *CodeUtils) {
 				f.fakeSkip = true
 			}
 		}
+		if v.Type.Category.IsContainerType() && v.Type.ValueType.Category.IsStructLike() {
+			f.fakeSize = &(&struct{ x int }{x: 1}).x
+		}
 	}
 	for _, t := range s.typedefs {
 		t.typeName = ensureType(resolver.ResolveTypeName(t.Type)).Deref()

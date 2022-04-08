@@ -428,6 +428,7 @@ type Field struct {
 	typeName        TypeName
 	frugalTypeName  TypeName
 	fakeSkip        bool
+	fakeSize        *int
 	defaultTypeName TypeName
 	defaultValue    Code
 	isResponse      bool

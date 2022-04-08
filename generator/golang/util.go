@@ -205,6 +205,9 @@ func (cu *CodeUtils) GenFieldTags(f *Field, insertPoint string) (string, error) 
 		if f.fakeSkip {
 			tags = append(tags, `fake:"skip"`)
 		}
+		if f.fakeSize != nil {
+			tags = append(tags, fmt.Sprintf(`fakesize:"%d"`, *f.fakeSize))
+		}
 	}
 	return cu.genFieldTags(f.Field, insertPoint, tags)
 }
