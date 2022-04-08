@@ -39,24 +39,23 @@ var (
 	_ = diff.Diff
 )
 
-func dlogFilter(dlog diff.Changelog) (ret diff.Changelog) {
-	for _, log := range dlog {
-		var skip bool
-		for _, path := range log.Path {
-			if strings.HasPrefix(path, "_") {
-				skip = true
+func Test{{GetPackageTestName .AST}}(t *testing.T) {
+	dlogFilter := func (dlog diff.Changelog) (ret diff.Changelog) {
+		for _, log := range dlog {
+			var skip bool
+			for _, path := range log.Path {
+				if strings.HasPrefix(path, "_") {
+					skip = true
+				}
+			}
+			if !skip {
+				ret = append(ret, log)
 			}
 		}
-		if !skip {
-			ret =append(ret, log)
-		}
+		return
 	}
-	return
-}
-
-func Test{{GetPackageTestName .AST}}(t *testing.T) {
 	var want, got []byte
-	_, _ = want, got
+	_, _, _ = want, got, dlogFilter
 {{- range .Structs}}
 {{template "StructLikeTest" .}}
 {{- end}}
